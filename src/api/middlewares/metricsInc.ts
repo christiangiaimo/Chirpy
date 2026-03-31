@@ -7,7 +7,7 @@ export function middlewareMetricsInc(
   next: NextFunction,
 ) {
   res.on("finish", () => {
-    config.fileServerHits += 1;
+    config.api.fileServerHits += 1;
   });
   next();
 }

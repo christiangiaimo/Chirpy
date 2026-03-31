@@ -43,6 +43,7 @@ export function middlewareError(
     res.status(403).json({ error: err.message });
   } else {
     console.log(msg);
+    console.error(err);
     res.status(errorCode).json({
       error: msg,
     });

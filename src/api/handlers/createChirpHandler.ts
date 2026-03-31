@@ -1,11 +1,13 @@
-import { Request, Response } from "express";
-import { respondWithError, respondWithJson } from "./json.js";
+import { Response, Request, NextFunction } from "express";
+import { createChirp } from "../db/queires/chirp.js";
 import { BadRequest } from "../middlewares/errors.js";
 
-export async function handlerValidateChirp(req: Request) {
-  type parameters = {
-    body: string;
-  };
+type createChirpParameters = {
+  body: string;
+  userId: string;
+};
+
+export function handlerValidateChirp(body: string): string {
   /* let body = "";
   req.on("data", (chunk) => {
     body += chunk;
@@ -20,9 +22,8 @@ export async function handlerValidateChirp(req: Request) {
       return;
     }
 */
-  const params: parameters = req.body;
   const maxChirpLenght = 140;
-  if (params.body && params.body.length > maxChirpLenght) {
+  if (body && body.length > maxChirpLenght) {
     //respondWithError(res, 400, "Chirp is too long");
     throw new BadRequest("Chirp is too long. Max length is 140");
   }
@@ -30,7 +31,7 @@ export async function handlerValidateChirp(req: Request) {
     valid: true,
   });*/
 
-  const words = params.body.trim().split(/\s+/);
+  const words = body.trim().split(/\s+/);
   const cleanedBody = [];
   const badWords = ["kerfuffle", "sharbert", "fornax"];
   for (let word of words) {
@@ -44,4 +45,24 @@ export async function handlerValidateChirp(req: Request) {
   const cleaned = cleanedBody.join(" ");
   return cleaned;
   //respondWithJson(res, 200, { cleanedBody: cleaned });
+}
+
+export async function createChirpHandler(
+  req: Request<{}, {}, createChirpParameters>,
+  res: Response,
+) {
+  const body = req.body;
+
+  const cleaned = handlerValidateChirp(req.body.body);
+  const { userId } = body;
+  console.error("createChirpHandler called", req.body);
+
+  const chirp = await createChirp({ body: cleaned, userId: userId });
+  res.status(201).json({
+    id: chirp.id,
+    createdAt: chirp.createdAt,
+    updatetAt: chirp.updatedAt,
+    body: chirp.body,
+    userId: chirp.userId,
+  });
 }
