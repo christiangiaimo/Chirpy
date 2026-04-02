@@ -10,7 +10,10 @@ import postgres from "postgres";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { config } from "./config.js";
-import { CreateUserHandler } from "./api/handlers/users.js";
+import {
+  CreateUserHandler,
+  validateUserLoginHandler,
+} from "./api/handlers/users.js";
 import { createChirpHandler } from "./api/handlers/createChirpHandler.js";
 import { getChirps } from "./api/db/queires/chirp.js";
 import {
@@ -35,6 +38,8 @@ app.post("/api/users", CreateUserHandler);
 app.post("/api/chirps", createChirpHandler);
 app.get("/api/chirps", getChirpsHandler);
 app.get("/api/chirps/:chirpId", getChirpHandler);
+app.post("/api/login", validateUserLoginHandler);
+
 //app.post("/api/chirps", (req, res, next) => {
 //  Promise.resolve(handlerValidateChirp(req, res)).catch(next);
 //});
