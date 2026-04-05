@@ -5,6 +5,10 @@ import { middlewareMetricsInc } from "./api/middlewares/metricsInc.js";
 import { handlerPrintMetrics } from "./api/handlers/printMetrics.js";
 import { handlerResetMetrics } from "./api/handlers/reset.js";
 import { handlerValidateChirp } from "./api/handlers/validateChirp.js";
+import {
+  refreshJWTTokenHandler,
+  revokeTokenHandler,
+} from "./api/handlers/tokensHandlers.js";
 import { middlewareError } from "./api/middlewares/errors.js";
 import postgres from "postgres";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
@@ -39,6 +43,8 @@ app.post("/api/chirps", createChirpHandler);
 app.get("/api/chirps", getChirpsHandler);
 app.get("/api/chirps/:chirpId", getChirpHandler);
 app.post("/api/login", validateUserLoginHandler);
+app.post("/api/refresh", refreshJWTTokenHandler);
+app.post("/api/revoke", revokeTokenHandler);
 
 //app.post("/api/chirps", (req, res, next) => {
 //  Promise.resolve(handlerValidateChirp(req, res)).catch(next);

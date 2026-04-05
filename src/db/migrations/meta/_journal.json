@@ -15,6 +15,13 @@
       "when": 1775004596570,
       "tag": "0001_gigantic_morg",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775403347884,
+      "tag": "0002_jittery_scream",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,13 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { checkPasswordHash, hashPassword, makeJWT, validateJWT } from "../auth";
+import {
+  checkPasswordHash,
+  getBearerToken,
+  hashPassword,
+  makeJWT,
+  validateJWT,
+} from "../auth";
+
+import { createRequest } from "node-mocks-http";
 
 describe("Password Hashing", () => {
   const password1 = "correctPassword123";
@@ -45,5 +53,28 @@ describe("JWT validation", () => {
   it("should validate the JWT token and return the user secret", async () => {
     const result = validateJWT(JWT2, user2.secret);
     expect(result).toBe(user2.userID);
+  });
+});
+
+describe("JWT user token auth", () => {
+  const mockReq1 = createRequest({
+    headers: { authorization: "Bearer test-token" },
+  });
+  const mockReq2 = createRequest({
+    headers: { authorization: "Bearer test-token-2" },
+  });
+  let token1: string;
+  let token2: string;
+
+  beforeAll(async () => {
+    token1 = getBearerToken(mockReq1);
+    token2 = getBearerToken(mockReq2);
+  });
+  it("Should return the user token as a string", async () => {
+    expect(token1).toBe("test-token");
+  });
+
+  it("Should return the user token as a string", async () => {
+    expect(token2).toBe("test-token-2");
   });
 });

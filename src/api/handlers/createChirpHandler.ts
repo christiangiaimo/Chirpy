@@ -1,10 +1,11 @@
 import { Response, Request, NextFunction } from "express";
 import { createChirp } from "../db/queires/chirp.js";
 import { BadRequest } from "../middlewares/errors.js";
+import { getBearerToken, validateJWT } from "../middlewares/auth.js";
+import { config } from "../../config.js";
 
 type createChirpParameters = {
   body: string;
-  userId: string;
 };
 
 export function handlerValidateChirp(body: string): string {
@@ -51,18 +52,22 @@ export async function createChirpHandler(
   req: Request<{}, {}, createChirpParameters>,
   res: Response,
 ) {
-  const body = req.body;
+  try {
+    const body = req.body;
 
-  const cleaned = handlerValidateChirp(req.body.body);
-  const { userId } = body;
-  console.error("createChirpHandler called", req.body);
+    const cleaned = handlerValidateChirp(body.body);
+    const token = getBearerToken(req);
+    const validatedJWT = validateJWT(token, config.secret);
 
-  const chirp = await createChirp({ body: cleaned, userId: userId });
-  res.status(201).json({
-    id: chirp.id,
-    createdAt: chirp.createdAt,
-    updatetAt: chirp.updatedAt,
-    body: chirp.body,
-    userId: chirp.userId,
-  });
+    const chirp = await createChirp({ body: cleaned, userId: validatedJWT });
+    res.status(201).json({
+      id: chirp.id,
+      createdAt: chirp.createdAt,
+      updatetAt: chirp.updatedAt,
+      body: chirp.body,
+      userId: chirp.userId,
+    });
+  } catch (err) {
+    res.status(401).json({ message: "Unauthorized" });
+  }
 }

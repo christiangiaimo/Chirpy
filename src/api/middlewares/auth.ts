@@ -1,6 +1,8 @@
 import { error } from "node:console";
 import * as argon2 from "argon2";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import { Request } from "express";
+import { randomBytes } from "node:crypto";
 
 type payload = Pick<JwtPayload, "iss" | "sub" | "iat" | "exp">;
 
@@ -55,6 +57,21 @@ export function validateJWT(tokenString: string, secret: string): string {
   } else if (decoded.sub && typeof decoded.sub === "string") {
     return decoded.sub;
   } else {
-    throw new Error("Invavlid user Id");
+    throw new Error("Invalid user Id");
   }
+}
+
+export function getBearerToken(req: Request): string {
+  const authHeader = req.get("Authorization");
+
+  if (!authHeader || !authHeader.startsWith("Bearer")) {
+    throw new Error("Invalid bearer token found");
+  }
+  const token = authHeader.split(" ")[1];
+  return token;
+}
+
+export function makeRefreshToken() {
+  const token = randomBytes(32).toString("hex");
+  return token;
 }

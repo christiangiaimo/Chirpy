@@ -14,6 +14,7 @@ export type APIConfig = {
 export type Config = {
   db: DBConfig;
   api: APIConfig;
+  secret: string;
 };
 
 const migrationConfig: MigrationConfig = {
@@ -38,4 +39,6 @@ export const config: Config = {
     port: 8080,
     platform: envOrThrow("PLATFORM"),
   },
+
+  secret: envOrThrow("SECRET"),
 };
