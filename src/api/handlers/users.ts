@@ -1,16 +1,23 @@
-import { createUser, getUserByEmail } from "../db/queires/users.js";
+import {
+  createUser,
+  getUserByEmail,
+  updateEmail,
+  updatePassword,
+  updateUserInfo,
+} from "../db/queires/users.js";
 import { Request, Response } from "express";
 import {
   getBearerToken,
   hashPassword,
   makeJWT,
   makeRefreshToken,
+  validateJWT,
 } from "../middlewares/auth.js";
 import { NewToken, newUser } from "src/db/schema.js";
 import * as argon2 from "argon2";
 import { verify } from "node:crypto";
 import { Unauthorized } from "../middlewares/errors.js";
-import { respondWithJson } from "./json.js";
+import { respondWithError, respondWithJson } from "./json.js";
 import { config } from "../../config.js";
 import { insertToken } from "../db/queires/tokens.js";
 
@@ -122,5 +129,25 @@ export async function validateUserLoginHandler(
     }
   } catch (error) {
     console.error(error);
+  }
+}
+
+export async function updateUserInfoHandler(req: Request, res: Response) {
+  try {
+    const { password, email } = req.body;
+    const token = getBearerToken(req);
+    const userId = validateJWT(token, config.secret);
+
+    const hashedPassword = await hashPassword(password);
+    const updatedUser = await updateUserInfo(userId, email, hashedPassword);
+
+    respondWithJson(res, 200, {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+    });
+  } catch (err) {
+    respondWithError(res, 401, "Unauthorized");
   }
 }
