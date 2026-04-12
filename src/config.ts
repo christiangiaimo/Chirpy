@@ -15,6 +15,7 @@ export type Config = {
   db: DBConfig;
   api: APIConfig;
   secret: string;
+  apiKey: string;
 };
 
 const migrationConfig: MigrationConfig = {
@@ -41,4 +42,5 @@ export const config: Config = {
   },
 
   secret: envOrThrow("SECRET"),
+  apiKey: envOrThrow("POLKA_KEY"),
 };

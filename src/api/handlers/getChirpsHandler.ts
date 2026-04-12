@@ -1,5 +1,11 @@
 import { Request, Response } from "express";
-import { deleteChirp, getChirp, getChirps } from "../db/queires/chirp.js";
+import {
+  deleteChirp,
+  getChirp,
+  getChirps,
+  getChirpsByUserId,
+  getChripsSorted,
+} from "../db/queires/chirp.js";
 import { respondWithError, respondWithJson } from "./json.js";
 import { getBearerToken, validateJWT } from "../middlewares/auth.js";
 import { config } from "../../config.js";
@@ -9,9 +15,27 @@ interface ChirpParams {
   chirpId: string;
 }
 
+interface AuthorId {
+  authorId: string;
+}
+
 export async function getChirpsHandler(req: Request, res: Response) {
-  const chirps = await getChirps();
-  respondWithJson(res, 200, chirps);
+  let authorId = "";
+  let authorIdQuery = req.query.authorId;
+  if (typeof authorIdQuery === "string") {
+    authorId = authorIdQuery;
+    const chirpsById = await getChirpsByUserId(authorId);
+    respondWithJson(res, 200, chirpsById);
+  } else {
+    let order = "";
+    let orderQuery = req.query.sort;
+    if (typeof orderQuery === "string") {
+      order = orderQuery;
+
+      const chirps = await getChripsSorted(order);
+      respondWithJson(res, 200, chirps);
+    }
+  }
 }
 
 export async function getChirpHandler(

@@ -47,3 +47,21 @@ export async function updateUserInfo(
     .returning();
   return result;
 }
+
+export async function getUserById(id: string) {
+  const [result] = await db.select().from(users).where(eq(users.id, id));
+  return result;
+}
+
+export async function upgradeUser(id: string) {
+  const user = getUserById(id);
+  if (!user) {
+    throw new Error("Invalid user ID");
+  }
+
+  const [result] = await db
+    .update(users)
+    .set({ isChirpyRed: true })
+    .where(eq(users.id, id));
+  return result;
+}

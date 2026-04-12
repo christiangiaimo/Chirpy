@@ -18,6 +18,7 @@ import {
   CreateUserHandler,
   updateUserInfoHandler,
   validateUserLoginHandler,
+  updateUserUpgradeHandler,
 } from "./api/handlers/users.js";
 import { createChirpHandler } from "./api/handlers/createChirpHandler.js";
 import { getChirps } from "./api/db/queires/chirp.js";
@@ -49,6 +50,7 @@ app.post("/api/refresh", refreshJWTTokenHandler);
 app.post("/api/revoke", revokeTokenHandler);
 app.put("/api/users", updateUserInfoHandler);
 app.delete("/api/chirps/:chirpId", deleteChirpHandler);
+app.post("/api/polka/webhooks", updateUserUpgradeHandler);
 
 //app.post("/api/chirps", (req, res, next) => {
 //  Promise.resolve(handlerValidateChirp(req, res)).catch(next);

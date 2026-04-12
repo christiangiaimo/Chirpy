@@ -4,16 +4,19 @@ import {
   updateEmail,
   updatePassword,
   updateUserInfo,
+  upgradeUser,
+  getUserById,
 } from "../db/queires/users.js";
 import { Request, Response } from "express";
 import {
+  getAPIKey,
   getBearerToken,
   hashPassword,
   makeJWT,
   makeRefreshToken,
   validateJWT,
 } from "../middlewares/auth.js";
-import { NewToken, newUser } from "src/db/schema.js";
+import { NewToken, newUser } from "../../db/schema.js";
 import * as argon2 from "argon2";
 import { verify } from "node:crypto";
 import { Unauthorized } from "../middlewares/errors.js";
@@ -28,6 +31,8 @@ interface CreateUserBody {
 }
 
 type CreateUserBodyPreview = Omit<CreateUserBody, "password">;
+
+type webhook = { event: string; data: { userId: string } };
 
 export async function CreateUserHandler(
   req: Request<{}, {}, CreateUserBody>,
@@ -65,6 +70,7 @@ export async function CreateUserHandler(
       email: dbUser.email,
       createdAt: dbUser.createdAt,
       updatedAt: dbUser.updatedAt,
+      isChirpyRed: dbUser.isChirpyRed,
     });
   } catch (error) {
     console.error(error);
@@ -95,7 +101,10 @@ export async function validateUserLoginHandler(
       res.status(401).json({ error: "Unauthorized", message: "Invalid email" });
       return;
     }
-    const verifyPassword = await argon2.verify(user.hashedPassword, password);
+    const verifyPassword = await argon2.verify(
+      user.hashedPassword as string,
+      password,
+    );
     if (verifyPassword === true) {
       const refreshToken = makeRefreshToken();
       const now = new Date();
@@ -105,11 +114,11 @@ export async function validateUserLoginHandler(
         now.getTime() + monthsInMiliSeconds,
       );
       const dbRefreshToken: NewToken = {
-        userId: user.id,
+        userId: user.id as string,
         token: refreshToken,
         expiresAt: expireRefreshTokenDate,
       };
-      const JWTtoken = makeJWT(user.id, expireJWTDate, config.secret);
+      const JWTtoken = makeJWT(user.id as string, expireJWTDate, config.secret);
 
       await insertToken(dbRefreshToken);
       const userPreview = {
@@ -119,6 +128,7 @@ export async function validateUserLoginHandler(
         email: user.email,
         token: JWTtoken,
         refreshToken: refreshToken,
+        isChirpyRed: user.isChirpyRed,
       };
 
       respondWithJson(res, 200, userPreview);
@@ -146,8 +156,39 @@ export async function updateUserInfoHandler(req: Request, res: Response) {
       email: updatedUser.email,
       createdAt: updatedUser.createdAt,
       updatedAt: updatedUser.updatedAt,
+      isChirpyRed: updatedUser.isChirpyRed,
     });
   } catch (err) {
     respondWithError(res, 401, "Unauthorized");
+  }
+}
+
+export async function updateUserUpgradeHandler(req: Request, res: Response) {
+  try {
+    const APIKey = await getAPIKey(req);
+    if (APIKey !== config.apiKey) {
+      res.status(401).send();
+      return;
+    }
+  } catch (err) {
+    res.status(401).send();
+    return;
+  }
+
+  const { event, data } = req.body as webhook;
+  if (event != "user.upgraded") {
+    res.status(204).send();
+    return;
+  }
+  if (event === "user.upgraded") {
+    const id = data.userId;
+    const user = await getUserById(id);
+    if (!user) {
+      res.status(404).send();
+      return;
+    }
+    await upgradeUser(id);
+    res.status(204).send();
+    return;
   }
 }

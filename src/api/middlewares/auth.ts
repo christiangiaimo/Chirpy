@@ -75,3 +75,9 @@ export function makeRefreshToken() {
   const token = randomBytes(32).toString("hex");
   return token;
 }
+
+export async function getAPIKey(req: Request) {
+  const authHeader = req.get("Authorization") as string;
+  const APIKey = authHeader.split(" ")[1];
+  return APIKey;
+}
